@@ -1,0 +1,403 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+    <link href="https://cdn.bootcss.com/element-ui/2.13.0/theme-chalk/index.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
+    <script src="https://cdn.bootcss.com/element-ui/2.13.0/index.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+
+    <style>
+        body{
+        }
+        #app{
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow: hidden;
+        }
+        .sidebar{
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 60px;
+            color: #f4f4f4;
+            background-color: #26282b;
+        }
+        .cq-my-header{
+            width: 35px;
+            height: 35px;
+            margin: auto;
+            margin-top: 17px!important;
+        }
+        .cq-my-header img{
+            width: 100%;
+            height: 100%;
+            user-select: none;
+            border-radius: 2px;
+
+
+        }
+
+        .win-control{
+            position: fixed;
+            z-index: 9;
+            top: 0;
+            right: 0;
+            display: flex;
+            height: 30px;
+        }
+        .cq-win-cbtn{
+            width: 20px;
+            height: 20px;
+            font-size: 13px;
+            font-weight: 900;
+            color: grey;
+            line-height: 20px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .cq-win-cbtn-acss{
+            width: 20px;
+            height: 20px;
+            font-size: 13px;
+            font-weight: 900;
+            color: grey;
+            line-height: 20px;
+            padding: 5px;
+            text-align: center;
+        }
+        .cq-win-cbtn:hover{
+            background: #f3483d;
+        }
+        .cq-win-cbtn-acss-hover{
+            background: darkgray;
+        }
+
+        .nodrag{
+            -webkit-app-region: no-drag;
+        }
+        .cq-wc-ico{
+            line-height: 1.5!important;
+        }
+        .drag{
+            -webkit-app-region: drag
+        }
+
+        .cq-side-tool {
+            margin: 0;
+            margin-top: 10px;
+            padding: 10px 19px 10px 19px;
+        }
+
+        .cq-side-bar {
+            margin: 0;
+            margin-top: 17px;
+            padding: 0;
+            height: calc(100% - 100px);
+        }
+
+        .cq-side-setting {
+            height: 48px;
+        }
+
+        .down-text {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            text-indent: 1em;
+            font-size: 14px;
+            color: rgb(102, 102, 102);
+        }
+    </style>
+</head>
+<body >
+
+<div id="app"  style="background: #eeeeee;">
+
+
+    <div class="top-tittle drag"  style="position: fixed;top:0;left: 60px;width:calc(100% - 60px) ;height:60px;z-index: 1"></div>
+    <div class="win-control nodrag" >
+
+        <div  class="cq-win-cbtn-acss " @click="winControl('min',$event)" @mouseover="winControlOver($event)" @mouseout="winControlOut($event)"><i class="el-icon-minus cq-wc-ico"></i></div>
+        <div  class="cq-win-cbtn-acss" @click="winControl('max',$event)" @mouseover="winControlOver($event)" @mouseout="winControlOut($event)"><i class="el-icon-copy-document cq-wc-ico"></i></div>
+        <div class="cq-win-cbtn " @click="winControl('close',$event)" @mouseover="winControlOver($event)" @mouseout="winControlOut($event)">
+            <i class="el-icon-close cq-wc-ico"></i>
+        </div>
+    </div>
+
+    <div style="position:fixed;right: 0;bottom: 0;width: 300px;
+        width: 500px;
+    top: auto;
+    bottom: 0px;
+    left: auto;
+    right: 30px;
+    display: block;
+    visibility: visible;
+    z-index: 42;
+        border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    border: 1px solid #e2e2e2;
+    box-shadow: 0 0 10px #ccc;
+    margin-bottom: -2px;
+">
+        <div style="background-color: #FAFDFF;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom: 1px solid #D0DFE7;
+    height: 44px;
+    line-height: 44px;
+    font-weight: 200;">
+            <span style="display: block;
+            margin-right: 50px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            text-indent: 1em;
+            font-size: 14px;
+            font-weight: 700;
+            color: #666;">
+                <em class="select-text">下载列表</em>
+            </span>
+            <div style="top: 13px;
+                        right: 12px;
+                        position: absolute;">
+                <i class="el-icon-arrow-down" v-show="openDownLoad"  @click="openDownLoad=!openDownLoad"></i>
+                <i class="el-icon-arrow-up"  v-show="!openDownLoad" @click="openDownLoad=!openDownLoad"></i>
+            </div>
+        </div>
+        <div v-show="openDownLoad"  style="overflow-y:auto;max-height: 600px; ">
+            <div  v-for="task in taskList" style="display: flex;
+                                                    padding: 20px;
+                                                    background: wheat;
+                                                    line-line-height: 30px;
+
+">
+                <div class="down-text" style="width: 45%;">{{task['filename']}}</div>
+                <div style="width: 30%;">
+                    <el-progress   style="   padding-right: 20px;" :text-inside="true" :stroke-width="26" :percentage="task.process"></el-progress>
+                </div>
+                <div style="    padding-left: 30px;
+    padding-top: 4px;"  class="down-text">{{task['speed']}}/s</div>
+            </div>
+        </div>
+
+    </div>
+
+<!--        <webview class="nodrag" src="https://pan.baidu.com/"  style="position: fixed;top:0;left: 0;width: 100%;height: 100%;"></webview>-->
+
+
+
+    <webview id="foo" src="https://pan.baidu.com/"  style="position:fixed;top:30px;left:0px;width:100%  ;height: calc(100% - 30px);z-index: 2;box-shadow: inset 0 2px 2px 1px rgba(154, 154, 204, 0.22);"></webview>
+
+
+
+
+</div>
+<script>
+    const ipcRenderer = require('electron').ipcRenderer;
+    var vueobj=new Vue({
+        el:"#app",
+        data(){
+            return {
+                tools:[
+                    {toolIcon:'el-icon-chat-dot-round'},
+                    {toolIcon:'el-icon-user'},
+                ],
+                hello:"nihao",
+                openDownLoad:false,
+                taskList:[
+
+                ],
+            };
+        },
+        methods:{
+            winControl(arg,event){
+                event.currentTarget.classList.remove("cq-win-cbtn-acss-hover")
+                ipcRenderer.send('win-control-message', arg);
+
+            },
+            winControlOver(event){
+
+                event.currentTarget.classList.add("cq-win-cbtn-acss-hover")
+            },
+            winControlOut(event){
+                event.currentTarget.classList.remove("cq-win-cbtn-acss-hover")
+            }
+        }
+    })
+        onload = () => {
+           var webview = document.querySelector('#foo')
+
+            webview.addEventListener('new-window', (e) => {
+                const protocol = require('url').parse(e.url).protocol;
+                if (protocol === 'http:' || protocol === 'https:') {
+                    webview.src = e.url;
+                    ipcRenderer.send("set-key-cookie","")
+                    webview.executeJavaScript(
+                        "  let task = setInterval(() => {\n" +
+                        "    let dom, t = document.querySelector(\"a.g-button[data-button-id][title=\u4e0b\u8f7d]\");\n" +
+                        "    if (t) {\n" +
+                        "      clearInterval(task);\n" +
+                        "      dom = t.cloneNode(true);\n" +
+                        "      t.after(dom);\n" +
+                        "      dom.removeAttribute(\"style\");\n" +
+                        "      t.remove();\n" +
+                        "      dom.addEventListener(\"click\", () => {\n" +
+                        "        let dom = window.event.currentTarget, arr = require(\"system-core:context/context.js\").instanceForSystem.list.getSelected();\n" +
+                        "var file=require(\"system-core:context/context.js\").instanceForSystem.list.getSelected()[0];"+
+                        "console.log('Cookie: '+document.cookie+'-'+file.path+'-'+file.server_filename);"+
+                        "      });\n" +
+                        "    }\n" +
+                        "  }, 10);"
+                    );
+                }
+            });
+
+
+            webview.addEventListener('dom-ready', (e) => {
+               if(webview.src.includes("https://pan.baidu.com/disk/home")){
+
+                   ipcRenderer.send("set-key-cookie","")
+                   webview.executeJavaScript(
+                       "  let task = setInterval(() => {\n" +
+                       "    let dom, t = document.querySelector(\"a.g-button[data-button-id][title=\u4e0b\u8f7d]\");\n" +
+                       "    if (t) {\n" +
+                       "      clearInterval(task);\n" +
+                       "      dom = t.cloneNode(true);\n" +
+                       "      t.after(dom);\n" +
+                       "      dom.removeAttribute(\"style\");\n" +
+                       "      t.remove();\n" +
+                       "      dom.addEventListener(\"click\", () => {\n" +
+                       "        let dom = window.event.currentTarget, arr = require(\"system-core:context/context.js\").instanceForSystem.list.getSelected();\n" +
+                       "var file=require(\"system-core:context/context.js\").instanceForSystem.list.getSelected()[0];"+
+                       "console.log('Cookie: '+document.cookie+'-'+file.path+'-'+file.server_filename);"+
+                       "      });\n" +
+                       "    }\n" +
+                       "  }, 10);"
+                   );
+               }
+            });
+
+            webview.addEventListener('did-start-loading', (e) => {
+
+
+                    ipcRenderer.send("set-key-cookie","")
+                    webview.executeJavaScript(
+                        "  let task = setInterval(() => {\n" +
+                        "    let dom, t = document.querySelector(\"a.g-button[data-button-id][title=\u4e0b\u8f7d]\");\n" +
+                        "    if (t) {\n" +
+                        "      clearInterval(task);\n" +
+                        "      dom = t.cloneNode(true);\n" +
+                        "      t.after(dom);\n" +
+                        "      dom.removeAttribute(\"style\");\n" +
+                        "      t.remove();\n" +
+                        "      dom.addEventListener(\"click\", () => {\n" +
+                        "        let dom = window.event.currentTarget, arr = require(\"system-core:context/context.js\").instanceForSystem.list.getSelected();\n" +
+                        "var file=require(\"system-core:context/context.js\").instanceForSystem.list.getSelected()[0];"+
+                        "console.log('Cookie: '+document.cookie+'-'+file.path+'-'+file.server_filename);"+
+                        "      });\n" +
+                        "    }\n" +
+                        "  }, 100);"
+                    );
+
+            });
+
+            webview.addEventListener('console-message', function(e) {
+
+                if(e.message.startsWith("Cookie:")){
+                    var taskStrings=e.message.split("-");
+                    var cookie=taskStrings[0]
+                    var path=taskStrings[1]
+                    var server_filename=taskStrings[2]
+                    var downLoadPath="C:\\Users\\chenqi\\IdeaProjects"
+                    var task={
+                        path:path,
+                        server_filename:server_filename,
+                        downLoadPath:downLoadPath,
+                    }
+                    ipcRenderer.send(
+                        "get-key-cookie",task
+                    )
+
+                }
+            });
+
+
+
+        }
+
+        ipcRenderer.on('start-task', function(event, arg) {
+            runExec(arg.server_filename,arg.path,arg.downLoadPath,arg.cookie)
+        })
+
+        const {resolve} = require('path')
+
+
+    const exec = require('child_process').exec
+
+    // 任何你期望执行的cmd命令，ls都可以
+    let cmdStr = 'aria2c.exe '
+    // 执行cmd命令的目录，如果使用cd xx && 上面的命令，这种将会无法正常退出子进程
+    let cmdPath = __dirname;
+    // 子进程名称
+    let workerProcess
+    // runExec();
+
+    function runExec(filename,path,downLoadPath,cookie) {
+
+        var exceCmd=cmdStr+' -c -d "'+downLoadPath+'"'+
+            ' -o "'+filename+'" '
+            +' --header=Cookie:"'+cookie
+            +'" --header="User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"'
+            +' "http://pcs.baidu.com/rest/2.0/pcs/file?method=download&app_id=778750&path='+encodeURIComponent(path)+'"'
+
+        var task={filename:filename,process:0,speed:"0kb",cmd:exceCmd}
+        vueobj.taskList.push(task)
+        vueobj.openDownLoad=true
+        console.log(exceCmd)
+        // 执行命令行，如果命令不需要路径，或就是项目根目录，则不需要cwd参数：
+
+        workerProcess = exec(exceCmd, {cwd: cmdPath})
+        // 不受child_process默认的缓冲区大小的使用方法，没参数也要写上{}：workerProcess = exec(cmdStr, {})
+
+        // 打印正常的后台可执行程序输出
+        workerProcess.stdout.on('data', function (data) {
+            // console.log('stdout: ' + data);
+            console.log('stdout: ' ,data);
+            try {
+                var patt1=new RegExp("(\\d*%)");
+                var patt2 = new RegExp("DL:.* ETA");
+                task.process=parseInt(patt1.exec(data)[0].replace("%",''));
+                task.speed=patt2.exec(data)[0].replace("DL:",'').replace(" ETA",'');
+            }catch (e) {
+                console.error(e)
+            }
+
+        });
+
+        // 打印错误的后台可执行程序输出
+        workerProcess.stderr.on('data', function (data) {
+            console.log('stderr: ' + data);
+        });
+
+        // 退出之后的输出
+        workerProcess.on('close', function (code) {
+            console.log('out code：' + code);
+        })
+    }
+
+
+
+    // ipcRenderer.on('win-', listener)
+
+
+
+</script>
+
+</body>
+</html>

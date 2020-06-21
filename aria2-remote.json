@@ -1,0 +1,9 @@
+[
+   {
+      "dir" : [ "C:\\Users\\chenqi\\Desktop", "D:\\", "D:\\云盘下载" ],
+      "host" : "127.0.0.1",
+      "name" : "本地磁盘",
+      "port" : 6808,
+      "token" : "pandownload"
+   }
+]
