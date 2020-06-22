@@ -192,7 +192,7 @@
 
 
 
-    <webview id="foo" src="https://pan.baidu.com/"  style="position:fixed;top:30px;left:0px;width:100%  ;height: calc(100% - 30px);z-index: 2;box-shadow: inset 0 2px 2px 1px rgba(154, 154, 204, 0.22);"></webview>
+    <webview id="foo" src="load.html"  style="position:fixed;top:30px;left:0px;width:100%  ;height: calc(100% - 30px);z-index: 2;box-shadow: inset 0 2px 2px 1px rgba(154, 154, 204, 0.22);"></webview>
 
 
 
@@ -200,37 +200,37 @@
 </div>
 <script>
     const ipcRenderer = require('electron').ipcRenderer;
-    var rpc = require('node-json-rpc');
-    var options = {
-        // int port of rpc server, default 5080 for http or 5433 for https
-        port: 6800,
-        // string domain name or ip of rpc server, default '127.0.0.1'
-        host: '127.0.0.1',
-        // string with default path, default '/'
-        path: '/jsonrpc',
-        // boolean false to turn rpc checks off, default true
-        strict: true
-    };
-
-    // Create a server object with options
-    var client = new rpc.Client(options);
-    client.call(
-        {"jsonrpc": "2.0", "method": "aria2.addUri",
-            "params": [
-                'token:"pandownload"',
-                ['https://www.right.com.cn/forum/data/attachment/forum/201708/02/182330nk4yicyt25pi4tyt.jpg'],
-                {
-                    out:"i1.jpg",
-                    dir:"E:\\cat\\"
-                },
-
-            ], "id":"00c-4917-a6b6-a190607cd97d"},
-        function (err, res) {
-            // Did it all work ?
-            if (err) { console.log(err); }
-            else { console.log(res); }
-        }
-    );
+    // var rpc = require('node-json-rpc');
+    // var options = {
+    //     // int port of rpc server, default 5080 for http or 5433 for https
+    //     port: 6800,
+    //     // string domain name or ip of rpc server, default '127.0.0.1'
+    //     host: '127.0.0.1',
+    //     // string with default path, default '/'
+    //     path: '/jsonrpc',
+    //     // boolean false to turn rpc checks off, default true
+    //     strict: true
+    // };
+    //
+    // // Create a server object with options
+    // var client = new rpc.Client(options);
+    // client.call(
+    //     {"jsonrpc": "2.0", "method": "aria2.addUri",
+    //         "params": [
+    //             'token:"pandownload"',
+    //             ['https://www.right.com.cn/forum/data/attachment/forum/201708/02/182330nk4yicyt25pi4tyt.jpg'],
+    //             {
+    //                 out:"i1.jpg",
+    //                 dir:"E:\\cat\\"
+    //             },
+    //
+    //         ], "id":"00c-4917-a6b6-a190607cd97d"},
+    //     function (err, res) {
+    //         // Did it all work ?
+    //         if (err) { console.log(err); }
+    //         else { console.log(res); }
+    //     }
+    // );
 
     var vueobj=new Vue({
         el:"#app",
@@ -264,6 +264,7 @@
     })
         onload = () => {
            var webview = document.querySelector('#foo')
+            webview.openDevTools()
 
             webview.addEventListener('new-window', (e) => {
                 const protocol = require('url').parse(e.url).protocol;
@@ -290,7 +291,6 @@
                 }
             });
 
-
             webview.addEventListener('dom-ready', (e) => {
                if(webview.src.includes("https://pan.baidu.com/disk/home")){
 
@@ -315,30 +315,6 @@
                }
             });
 
-            webview.addEventListener('did-start-loading', (e) => {
-
-
-                    ipcRenderer.send("set-key-cookie","")
-                    webview.executeJavaScript(
-                        "  let task = setInterval(() => {\n" +
-                        "    let dom, t = document.querySelector(\"a.g-button[data-button-id][title=\u4e0b\u8f7d]\");\n" +
-                        "    if (t) {\n" +
-                        "      clearInterval(task);\n" +
-                        "      dom = t.cloneNode(true);\n" +
-                        "      t.after(dom);\n" +
-                        "      dom.removeAttribute(\"style\");\n" +
-                        "      t.remove();\n" +
-                        "      dom.addEventListener(\"click\", () => {\n" +
-                        "        let dom = window.event.currentTarget, arr = require(\"system-core:context/context.js\").instanceForSystem.list.getSelected();\n" +
-                        "var file=require(\"system-core:context/context.js\").instanceForSystem.list.getSelected()[0];"+
-                        "console.log('Cookie: '+document.cookie+'-'+file.path+'-'+file.server_filename);"+
-                        "      });\n" +
-                        "    }\n" +
-                        "  }, 100);"
-                    );
-
-            });
-
             webview.addEventListener('console-message', function(e) {
 
                 if(e.message.startsWith("Cookie:")){
@@ -358,6 +334,7 @@
 
                 }
             });
+            webview.src='https://pan.baidu.com/'
 
 
 
@@ -375,7 +352,8 @@
     // 任何你期望执行的cmd命令，ls都可以
     let cmdStr = 'aria2c.exe '
     // 执行cmd命令的目录，如果使用cd xx && 上面的命令，这种将会无法正常退出子进程
-    let cmdPath = __dirname;
+    let cmdPath = resolve(__dirname,  "../");
+    console.log("dir",cmdPath)
     // 子进程名称
     let workerProcess
     // runExec();

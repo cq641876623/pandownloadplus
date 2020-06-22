@@ -43,6 +43,7 @@ function createWindow () {
     win.on("unmaximize",function () {
         console.log("unmaximize")
     })
+    win.maximize()
 
     ipcMain.on('set-key-cookie', function(event, arg) {
         session.defaultSession.cookies.get({ name:"BDUSS",domain: '.baidu.com' })
