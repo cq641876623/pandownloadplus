@@ -2,6 +2,8 @@ const { app, BrowserWindow,Menu, Tray,ipcMain  } = require('electron')
 const electron = require('electron')
 const { session } = require('electron')
 
+
+
 const path = require('path');
 
 // 保持对window对象的全局引用，如果不这么做的话，当JavaScript对象被
@@ -11,6 +13,9 @@ let defWidth=833
 let defHeight=600
 
 function createWindow () {
+
+
+
     let keyCookie=null;
     // 创建浏览器窗口。
     win = new BrowserWindow({
@@ -90,6 +95,11 @@ function createWindow () {
         }
 
     });
+
+
+
+
+
 
 
 

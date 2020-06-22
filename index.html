@@ -200,6 +200,38 @@
 </div>
 <script>
     const ipcRenderer = require('electron').ipcRenderer;
+    var rpc = require('node-json-rpc');
+    var options = {
+        // int port of rpc server, default 5080 for http or 5433 for https
+        port: 6800,
+        // string domain name or ip of rpc server, default '127.0.0.1'
+        host: '127.0.0.1',
+        // string with default path, default '/'
+        path: '/jsonrpc',
+        // boolean false to turn rpc checks off, default true
+        strict: true
+    };
+
+    // Create a server object with options
+    var client = new rpc.Client(options);
+    client.call(
+        {"jsonrpc": "2.0", "method": "aria2.addUri",
+            "params": [
+                'token:"pandownload"',
+                ['https://www.right.com.cn/forum/data/attachment/forum/201708/02/182330nk4yicyt25pi4tyt.jpg'],
+                {
+                    out:"i1.jpg",
+                    dir:"E:\\cat\\"
+                },
+
+            ], "id":"00c-4917-a6b6-a190607cd97d"},
+        function (err, res) {
+            // Did it all work ?
+            if (err) { console.log(err); }
+            else { console.log(res); }
+        }
+    );
+
     var vueobj=new Vue({
         el:"#app",
         data(){
