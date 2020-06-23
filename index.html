@@ -344,7 +344,8 @@
     // 任何你期望执行的cmd命令，ls都可以
     let cmdStr = 'aria2c.exe '
     // 执行cmd命令的目录，如果使用cd xx && 上面的命令，这种将会无法正常退出子进程
-    let cmdPath = resolve(__dirname,  "../");
+    // let cmdPath = resolve(__dirname,  "../");//打包
+    let cmdPath =  resolve(__dirname,"");//未打包
     console.log("dir",cmdPath)
     // 子进程名称
     let workerProcess
