@@ -1,6 +1,8 @@
 const { app, BrowserWindow,Menu, Tray,ipcMain  } = require('electron')
 const electron = require('electron')
 const { session } = require('electron')
+const exec = require('child_process').exec
+const {resolve} = require('path')
 
 
 
@@ -45,6 +47,7 @@ function createWindow () {
     })
     win.maximize()
 
+
     ipcMain.on('set-key-cookie', function(event, arg) {
         session.defaultSession.cookies.get({ name:"BDUSS",domain: '.baidu.com' })
             .then((cookies) => {
@@ -57,7 +60,7 @@ function createWindow () {
     })
     ipcMain.on('get-key-cookie', function(event, arg) {
         if(arg!=null){
-            arg.cookie=keyCookie;
+            arg[0].cookie=keyCookie;
         }
         event.sender.send("start-task",arg)
     })
@@ -96,9 +99,19 @@ function createWindow () {
         }
 
     });
+    // let cmdPath = resolve(__dirname,  "../");//打包
+    let cmdPath =  resolve(__dirname,"");//未打包
+    let cmdStr = 'aria2c.exe --conf-path='+cmdPath+'"/aria2.conf" -D'
 
+    workerProcess = exec(cmdStr, {cwd: cmdPath})
+    workerProcess.stdout.on('data', function (data) {
+        // console.log('stdout: ' + data);
+        console.log('stdout: ' ,data);
 
+    });
+    // workerProcess.disconnect()
 
+    // workerProcess
 
 
 
@@ -132,6 +145,9 @@ app.on('window-all-closed', () => {
     // 在 macOS 上，除非用户用 Cmd + Q 确定地退出，
     // 否则绝大部分应用及其菜单栏会保持激活。
     if (process.platform !== 'darwin') {
+
+        workerProcess = exec("taskkill /F /im aria2c.exe")
+
         app.quit()
     }
 })

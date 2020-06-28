@@ -129,6 +129,28 @@
             <i class="el-icon-close cq-wc-ico"></i>
         </div>
     </div>
+    <div style="position: fixed;
+                            width: 400px;
+                            height: 200px;
+                            top: calc(50% - 200px);
+                            left: calc(50% - 400px);
+                            z-index: 9999999;
+                            box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.1);
+                            padding: 40px;
+                            border-radius: 10px;
+                            background: #fff;
+                           "
+         v-show="settingpre">
+        <div>
+
+            <div style="width: 20px;height: 20px;border-radius: 50%;background: red;position: absolute;right: 10px;top: 10px;"  @click="settingpre=!settingpre"></div>
+            <div>下载地址：</div>
+            <el-input v-model="downLoadPath"></el-input>
+<!--            <input type="file" id="downpath"  webkitdirectory directory />-->
+        </div>
+
+    </div>
+
 
     <div style="position:fixed;right: 0;bottom: 0;width: 300px;
         width: 500px;
@@ -163,6 +185,15 @@
             color: #666;" >
                 <em class="select-text">下载列表</em>
             </span>
+            <div style="position: absolute;top: 0;right: 114px;" >
+                <em class="select-text">正在下载:{{ariaStatus.numActive}}</em>
+                <em class="select-text">({{ariaStatus.downloadSpeed}})  </em>
+            </div>
+            <div style="top: 13px;
+                        right: 30px;
+                        position: absolute;">
+                <i class="el-icon-setting"   @click="settingpre=!settingpre"></i>
+            </div>
             <div style="top: 13px;
                         right: 12px;
                         position: absolute;">
@@ -188,6 +219,7 @@
 
     </div>
 
+
 <!--        <webview class="nodrag" src="https://pan.baidu.com/"  style="position: fixed;top:0;left: 0;width: 100%;height: 100%;"></webview>-->
 
 
@@ -200,37 +232,17 @@
 </div>
 <script>
     const ipcRenderer = require('electron').ipcRenderer;
-    // var rpc = require('node-json-rpc');
-    // var options = {
-    //     // int port of rpc server, default 5080 for http or 5433 for https
-    //     port: 6800,
-    //     // string domain name or ip of rpc server, default '127.0.0.1'
-    //     host: '127.0.0.1',
-    //     // string with default path, default '/'
-    //     path: '/jsonrpc',
-    //     // boolean false to turn rpc checks off, default true
-    //     strict: true
-    // };
-    //
-    // // Create a server object with options
-    // var client = new rpc.Client(options);
-    // client.call(
-    //     {"jsonrpc": "2.0", "method": "aria2.addUri",
-    //         "params": [
-    //             'token:"pandownload"',
-    //             ['https://www.right.com.cn/forum/data/attachment/forum/201708/02/182330nk4yicyt25pi4tyt.jpg'],
-    //             {
-    //                 out:"i1.jpg",
-    //                 dir:"E:\\cat\\"
-    //             },
-    //
-    //         ], "id":"00c-4917-a6b6-a190607cd97d"},
-    //     function (err, res) {
-    //         // Did it all work ?
-    //         if (err) { console.log(err); }
-    //         else { console.log(res); }
-    //     }
-    // );
+
+    // Create a server object with options
+    var websocket = require('./websocket');
+    const {resolve} = require('path')
+    const path = require('path')
+
+
+
+
+
+
 
     var vueobj=new Vue({
         el:"#app",
@@ -242,9 +254,19 @@
                 ],
                 hello:"nihao",
                 openDownLoad:false,
+                settingpre:false,
                 taskList:[
 
                 ],
+                downLoadPath:"",
+                ariaStatus:{
+                    downloadSpeed: "0 B/s",
+                    numActive: "0",
+                    numStopped: "0",
+                    numStoppedTotal: "0",
+                    numWaiting: "0",
+                    uploadSpeed: "0",
+                }
             };
         },
         methods:{
@@ -261,8 +283,45 @@
             winControlOut(event){
                 event.currentTarget.classList.remove("cq-win-cbtn-acss-hover")
             }
+        },
+        watch:{
+            "downLoadPath":function (nVal) {
+                console.log("nVal",nVal)
+                localStorage.setItem("downloadPath",nVal);
+
+            }
         }
     })
+    if(localStorage.getItem("downloadPath")!=null){
+        vueobj.downLoadPath=localStorage.getItem("downloadPath");
+    }else {
+        // let download = resolve(__dirname,  "./download");//打包
+        let download =  resolve(__dirname,"./download");//未打包
+        console.log("download",download);
+
+        vueobj.downLoadPath=download;
+    }
+    //
+    // var downpath=document.getElementById("downpath")
+    // downpath.addEventListener("change",function (e) {
+    //     console.log("e",e)
+    //     if(this.files.length){
+    //
+    //         var file=this.files[0];
+    //         console.log(file)
+    //         var endPath=null;
+    //         if(file.webkitRelativePath.includes("/")){
+    //             endPath=file.webkitRelativePath.replace(new RegExp("/", "g"),path.sep)
+    //         }
+    //         if(file.webkitRelativePath.includes("\\")){
+    //             endPath=file.webkitRelativePath.replace(new RegExp("\\", "g"),path.sep)
+    //         }
+    //         vueobj.downLoadPath=file.path.replace(endPath,"")
+    //     }
+    // })
+
+
+
         onload = () => {
            var webview = document.querySelector('#foo')
             webview.openDevTools()
@@ -280,7 +339,7 @@
 
                    ipcRenderer.send("set-key-cookie","")
                    webview.executeJavaScript(
-                       "  const ipcRenderer = require('electron').ipcRenderer;" +
+                       "  const ipcRenderer =module.require('electron').ipcRenderer;" +
                        "  let task = setInterval(() => {\n" +
                        "    let dom, t = document.querySelector(\"a.g-button[data-button-id][title=\u4e0b\u8f7d]\");\n" +
                        "    if (t) {\n" +
@@ -293,9 +352,7 @@
                        "        let dom = window.event.currentTarget, arr = require(\"system-core:context/context.js\").instanceForSystem.list.getSelected();\n" +
                                    "var file=require(\"system-core:context/context.js\").instanceForSystem.list.getSelected()[0];"+
                                    "console.log('Cookie: '+document.cookie+'-'+file.path+'-'+file.server_filename);"+
-                                   "ipcRenderer.sendToHost('request-task',{path:file.path,\n" +
-                       "                        server_filename:file.server_filename,\n" +
-                       "                        downLoadPath:'asdasd',} )"+
+                                   "ipcRenderer.sendToHost('request-task',{path:file.path,server_filename:file.server_filename} )"+
                        "      });\n" +
                        "    }\n" +
                        "  }, 10);"
@@ -303,101 +360,156 @@
                }
             });
 
-            webview.addEventListener('console-message', function(e) {
 
-                if(e.message.startsWith("Cookie:")){
-                    var taskStrings=e.message.split("-");
-                    var cookie=taskStrings[0]
-                    var path=taskStrings[1]
-                    var server_filename=taskStrings[2]
-                    var downLoadPath="C:\\Users\\chenqi\\IdeaProjects"
-                    var task={
-                        path:path,
-                        server_filename:server_filename,
-                        downLoadPath:downLoadPath,
-                    }
+
+            // webview.addEventListener('console-message', function(e) {
+            //
+            //     if(e.message.startsWith("Cookie:")){
+            //         var taskStrings=e.message.split("-");
+            //         var cookie=taskStrings[0]
+            //         var path=taskStrings[1]
+            //         var server_filename=taskStrings[2]
+            //         var downLoadPath="C:\\Users\\chenqi\\IdeaProjects"
+            //         var task={
+            //             path:path,
+            //             server_filename:server_filename,
+            //             downLoadPath:downLoadPath,
+            //         }
+            //         ipcRenderer.send(
+            //             "get-key-cookie",task
+            //         )
+            //
+            //     }
+            // });
+            webview.getWebContents().loadURL('https://pan.baidu.com/')
+            webview.addEventListener('ipc-message', function(event) {
+                console.log(event.channel);
+                console.log(event.args );
+                if(event.channel=='request-task'){
+                    event.args[0].downLoadPath=vueobj.downLoadPath
                     ipcRenderer.send(
-                        "get-key-cookie",task
+                        "get-key-cookie",event.args
                     )
 
+
                 }
+                // Prints "pong"
             });
-            webview.loadURL('https://pan.baidu.com/')
 
 
 
         }
 
         ipcRenderer.on('start-task', function(event, arg) {
-            runExec(arg.server_filename,arg.path,arg.downLoadPath,arg.cookie)
+            // runExec(arg.server_filename,arg.path,arg.downLoadPath,arg.cookie)
+            console.log("任务参数",arg)
+            console.log({
+                "method": "aria2.addUri",
+                "params": [
+                    "token:rorochen-download",
+                    [ "http://pcs.baidu.com/rest/2.0/pcs/file?method=download&app_id=778750&path="+encodeURIComponent(arg[0].path)],
+                    {
+                        header:"Cookie:"+arg[0].cookie,
+                        "user-agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36",
+                        out: arg[0].server_filename,
+                        dir: arg[0].downLoadPath
+                    },
+
+                ]
+            })
+            websocket.connect(function() {
+                websocket.send({
+                    "method": "aria2.addUri",
+                    "params": [
+                        "token:rorochen-download",
+                        [ "http://pcs.baidu.com/rest/2.0/pcs/file?method=download&app_id=778750&path="+encodeURIComponent(arg[0].path)],
+                        {
+                            header:"Cookie:"+arg[0].cookie,
+                            "user-agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36",
+                            out: arg[0].server_filename,
+                            dir: arg[0].downLoadPath
+                        },
+
+                    ]
+                }, function(result) {
+                    console.log(result);
+                    var task={
+                        gid:result.obj.result,
+                        filename:arg[0].server_filename,
+                        status:0,
+                        process:0,
+                        speed:"0b"
+                    };
+                    vueobj.taskList.push(task)
+                });
+            });
+
+
         })
 
-        ipcRenderer.on('request-task', function(event, arg) {
-            console.log("xasd".arg)
-        })
 
-        const {resolve} = require('path')
+    let aria2StatusTask=setInterval(function () {
+        // var statusRequest={"jsonrpc": "2.0", "method": "system.multicall",
+        //     "params": [
+        //     [
+        //         {methodName: "aria2.tellActive", params: ["token:rorochen-download"]},
+        //         {methodName: "aria2.tellWaiting", params: ["token:rorochen-download", 0, 1000]},
+        //         {methodName: "aria2.tellStopped", params: ["token:rorochen-download", 0, 1000]},
+        //         {methodName: "aria2.getGlobalStat", params: ["token:rorochen-download"]},
+        //     ]
+        //
+        // ], "id":guid()};
+        websocket.connect(function() {
+            websocket.send({
+                "method": "system.multicall",
+                "params": [
+                    [
+                        {methodName: "aria2.tellActive", params: ["token:rorochen-download"]},
+                        {methodName: "aria2.tellWaiting", params: ["token:rorochen-download", 0, 1000]},
+                        {methodName: "aria2.tellStopped", params: ["token:rorochen-download", 0, 1000]},
+                        {methodName: "aria2.getGlobalStat", params: ["token:rorochen-download"]},
+                    ]
+                ]
+            }, function(result) {
+                console.log(res);
+                var res=result.obj
+                try{
+                    res['result'][3][0].downloadSpeed=fmtsize(parseInt(res['result'][3][0].downloadSpeed))+"/s"
+                    vueobj.ariaStatus=res['result'][3][0]
+                    console.log("vueobj.ariaStatus",vueobj.ariaStatus)
 
-
-    const exec = require('child_process').exec
-
-    // 任何你期望执行的cmd命令，ls都可以
-    let cmdStr = 'aria2c.exe '
-    // 执行cmd命令的目录，如果使用cd xx && 上面的命令，这种将会无法正常退出子进程
-    // let cmdPath = resolve(__dirname,  "../");//打包
-    let cmdPath =  resolve(__dirname,"");//未打包
-    console.log("dir",cmdPath)
-    // 子进程名称
-    let workerProcess
-    // runExec();
-
-    function runExec(filename,path,downLoadPath,cookie) {
-
-        var exceCmd=cmdStr+' -c -d "'+downLoadPath+'"'+
-            ' -o "'+filename+'" '
-            +' --header=Cookie:"'+cookie
-            +'" --header="User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"'
-            +' "http://pcs.baidu.com/rest/2.0/pcs/file?method=download&app_id=778750&path='+encodeURIComponent(path)+'"'
-
-        var task={filename:filename,process:0,speed:"0kb",cmd:exceCmd}
-        vueobj.taskList.push(task)
-        vueobj.openDownLoad=true
-        console.log(exceCmd)
-        // 执行命令行，如果命令不需要路径，或就是项目根目录，则不需要cwd参数：
-
-        workerProcess = exec(exceCmd, {cwd: cmdPath})
-        // 不受child_process默认的缓冲区大小的使用方法，没参数也要写上{}：workerProcess = exec(cmdStr, {})
-
-        // 打印正常的后台可执行程序输出
-        workerProcess.stdout.on('data', function (data) {
-            // console.log('stdout: ' + data);
-            console.log('stdout: ' ,data);
-            try {
-                var patt1=new RegExp("(\\d*%)");
-                var patt2 = new RegExp("DL:.* ETA");
-                task.process=parseInt(patt1.exec(data)[0].replace("%",''));
-                task.speed=patt2.exec(data)[0].replace("DL:",'').replace(" ETA",'');
-            }catch (e) {
-                console.error(e)
-            }
-
+                    res['result'][0][0].forEach(function (item) {
+                        console.log(item)
+                        console.log(vueobj.taskList)
+                        for(var i=0;i<vueobj.taskList.length;i++){
+                            if(vueobj.taskList[i].gid==item.gid){
+                                vueobj.taskList[i].speed= fmtsize(parseInt(item.downloadSpeed));
+                                vueobj.taskList[i].process=parseInt(parseInt(item.completedLength)/parseInt(item.totalLength)*100)
+                                break;
+                            }
+                        }
+                    });
+                }catch (e) {
+                    console.log("status获取失败",e);
+                }
+            });
         });
 
-        // 打印错误的后台可执行程序输出
-        workerProcess.stderr.on('data', function (data) {
-            console.log('stderr: ' + data);
-        });
 
-        // 退出之后的输出
-        workerProcess.on('close', function (code) {
-            console.log('out code：' + code);
-        })
+
+    },1000)
+
+
+
+    function fmtsize(e) {
+        return (e = +e) <= 1024
+            ? e.toFixed(0) + " B"
+            : (e /= 1024) <= 1024
+                ? e.toFixed(1) + " KB"
+                : (e /= 1024) <= 1024
+                    ? e.toFixed(2) + " MB"
+                    : (e /= 1024).toFixed(3) + "GB"
     }
-
-
-
-    // ipcRenderer.on('win-', listener)
-
 
 
 </script>
