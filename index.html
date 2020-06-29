@@ -133,7 +133,7 @@
                             width: 400px;
                             height: 200px;
                             top: calc(50% - 200px);
-                            left: calc(50% - 400px);
+                            left: calc(50% - 200px);
                             z-index: 9999999;
                             box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.1);
                             padding: 40px;
@@ -206,14 +206,38 @@
                                                     padding: 20px;
                                                     background: wheat;
                                                     line-line-height: 30px;
+                                                    justify-content: space-between;
 
 ">
-                <div class="down-text" style="width: 45%;">{{task['filename']}}</div>
-                <div style="width: 30%;">
-                    <el-progress   style="   padding-right: 20px;" :text-inside="true" :stroke-width="26" :percentage="task.process"></el-progress>
+                <div class="down-text" style="width: 35%;">
+
+                    <el-tooltip :content="task['filename']" placement="top">
+                        <div>{{task['filename']}}</div>
+                    </el-tooltip>
                 </div>
-                <div style="    padding-left: 30px;
-    padding-top: 4px;"  class="down-text">{{task['speed']}}/s</div>
+                <div style="width: 30%;" v-show="task.status!=3">
+                    <el-progress   style="padding-left: 15px;" :text-inside="true" :stroke-width="26" :percentage="task.process"></el-progress>
+                </div>
+                <div style="    padding-left: 30px;padding-top: 4px; padding-right: 30px;"  class="down-text" v-show="task.status==0">{{task['speed']}}/s</div>
+                <div style="    padding-top: 4px;padding-left: 30px;padding-right: 30px;"  class="down-text" v-show="task.status==5">已完成</div>
+                <div style="    padding-top: 4px;padding-left: 30px;padding-right: 30px;"  class="down-text" v-show="task.status==3">下载错误</div>
+                <div style="    padding-top: 4px;padding-left: 30px;padding-right: 30px;"  class="down-text" v-show="task.status==1">等待下载</div>
+
+                <div style="display: flex;">
+                    <!--                暂停-->
+                    <div style="margin: 4px;width: 20px;height: 20px;background: rgb(255, 152, 0);border-radius: 50%;"  class="down-text" @click="pauseTask(task)"  v-show="task.status==0">
+                    </div>
+                    <!--                启动-->
+                    <div style="margin: 4px;width: 20px;height: 20px;background: #4caf50;border-radius: 50%;"  class="down-text" @click="unpauseTask(task)" v-show="task.status==2">
+                    </div>
+
+                    <!--                删除-->
+                    <div style="margin: 4px;width: 20px;height: 20px;background: rgb(244, 67, 54);border-radius: 50%;"  class="down-text" @click="removeTask(task)">
+                    </div>
+
+                </div>
+
+
             </div>
         </div>
 
@@ -282,7 +306,61 @@
             },
             winControlOut(event){
                 event.currentTarget.classList.remove("cq-win-cbtn-acss-hover")
-            }
+            },
+            pauseTask(task){
+                websocket.connect(function() {
+                    websocket.send({
+                        "method": "aria2.forcePause",
+                        "params": [
+                            "token:rorochen-download",
+                            task.gid
+
+                        ]
+                    }, function(result) {
+                        console.log(result);
+                    });
+                });
+            },
+            unpauseTask(task){
+                websocket.connect(function() {
+                    websocket.send({
+                        "method": "aria2.unpause",
+                        "params": [
+                            "token:rorochen-download",
+                            task.gid
+
+                        ]
+                    }, function(result) {
+                        console.log(result);
+                    });
+                });
+            },
+            removeTask(task){
+                var method="";
+                if(task.status<3){
+                    method="aria2.forceRemove"
+                }else {
+                    method="aria2.removeDownloadResult"
+                }
+                websocket.connect(function() {
+                    websocket.send({
+                        "method": method,
+                        "params": [
+                            "token:rorochen-download",
+                            task.gid
+
+                        ]
+                    }, function(result) {
+                        for(var i=0;i<vueobj.taskList.length;i++){
+                            if(vueobj.taskList[i].gid==task.gid){
+                                vueobj.taskList.splice(i,1);
+                                break;
+                            }
+                        }
+                        console.log(result);
+                    });
+            })
+            },
         },
         watch:{
             "downLoadPath":function (nVal) {
@@ -295,8 +373,8 @@
     if(localStorage.getItem("downloadPath")!=null){
         vueobj.downLoadPath=localStorage.getItem("downloadPath");
     }else {
-        // let download = resolve(__dirname,  "./download");//打包
-        let download =  resolve(__dirname,"./download");//未打包
+        let download = resolve(__dirname,  "../../download");//打包
+        // let download =  resolve(__dirname,"./download");//未打包
         console.log("download",download);
 
         vueobj.downLoadPath=download;
@@ -324,7 +402,7 @@
 
         onload = () => {
            var webview = document.querySelector('#foo')
-            webview.openDevTools()
+               // webview.openDevTools()
 
             webview.addEventListener('new-window', (e) => {
                 const protocol = require('url').parse(e.url).protocol;
@@ -350,9 +428,13 @@
                        "      t.remove();\n" +
                        "      dom.addEventListener(\"click\", () => {\n" +
                        "        let dom = window.event.currentTarget, arr = require(\"system-core:context/context.js\").instanceForSystem.list.getSelected();\n" +
-                                   "var file=require(\"system-core:context/context.js\").instanceForSystem.list.getSelected()[0];"+
-                                   "console.log('Cookie: '+document.cookie+'-'+file.path+'-'+file.server_filename);"+
-                                   "ipcRenderer.sendToHost('request-task',{path:file.path,server_filename:file.server_filename} )"+
+                                   // "var files=require(\"system-core:context/context.js\").instanceForSystem.list.getSelected()[0];"+
+                                   "var files=require(\"system-core:context/context.js\").instanceForSystem.list.getSelected();"+
+                                   "for(var i=0;i<files.length;i++){" +
+                                        "ipcRenderer.sendToHost('request-task',{path:files[i].path,server_filename:files[i].server_filename} )"+
+                                    "}"+
+                                   "console.log(files);"+
+                                   // "ipcRenderer.sendToHost('request-task',{path:file.path,server_filename:file.server_filename} )"+
                        "      });\n" +
                        "    }\n" +
                        "  }, 10);"
@@ -417,6 +499,7 @@
 
                 ]
             })
+            vueobj.openDownLoad=true
             websocket.connect(function() {
                 websocket.send({
                     "method": "aria2.addUri",
@@ -478,17 +561,44 @@
                     vueobj.ariaStatus=res['result'][3][0]
                     console.log("vueobj.ariaStatus",vueobj.ariaStatus)
 
-                    res['result'][0][0].forEach(function (item) {
-                        console.log(item)
-                        console.log(vueobj.taskList)
-                        for(var i=0;i<vueobj.taskList.length;i++){
-                            if(vueobj.taskList[i].gid==item.gid){
-                                vueobj.taskList[i].speed= fmtsize(parseInt(item.downloadSpeed));
-                                vueobj.taskList[i].process=parseInt(parseInt(item.completedLength)/parseInt(item.totalLength)*100)
-                                break;
+                    // res['result'][0][0].forEach(function (item) {
+                    //     console.log(item)
+                    //     console.log(vueobj.taskList)
+                    //     for(var i=0;i<vueobj.taskList.length;i++){
+                    //         if(vueobj.taskList[i].gid==item.gid){
+                    //             vueobj.taskList[i].speed= fmtsize(parseInt(item.downloadSpeed));
+                    //             vueobj.taskList[i].process=parseInt(parseInt(item.completedLength)/parseInt(item.totalLength)*100)
+                    //             vueobj.taskList[i].status=getStatus(item.status)
+                    //             break;
+                    //         }
+                    //     }
+                    // });
+                    for(var k=0;k<3;k++){
+                        for(var j=0;j<res['result'][k][0].length;j++){
+                            var item=res['result'][k][0][j];
+                            for(var i=0;i<vueobj.taskList.length;i++){
+                                if(vueobj.taskList[i].gid==item.gid){
+                                    vueobj.taskList[i].speed= fmtsize(parseInt(item.downloadSpeed));
+                                    vueobj.taskList[i].process=parseInt(parseInt(item.completedLength)/parseInt(item.totalLength)*100)
+                                    vueobj.taskList[i].status=getStatus(item.status)
+                                    break;
+                                }
+                                if((i+1)==vueobj.taskList.length){
+                                    var task={
+                                        gid:item.gid,
+                                        filename:item.files[0].path,
+                                        status:getStatus(item.status),
+                                        process:parseInt(parseInt(item.completedLength)/parseInt(item.totalLength)*100),
+                                        speed:fmtsize(parseInt(item.downloadSpeed))
+                                    };
+                                    vueobj.taskList.push(task)
+                                }
                             }
+
                         }
-                    });
+                    }
+
+
                 }catch (e) {
                     console.log("status获取失败",e);
                 }
@@ -511,6 +621,20 @@
                     : (e /= 1024).toFixed(3) + "GB"
     }
 
+    
+    function getStatus(statusName) {
+        var status={
+            "active":0,
+            "waiting":1,
+            "paused":2,
+            "error":3,
+            "removed":4,
+            "complete":5,
+        }
+        return status[statusName];
+
+
+    }
 
 </script>
 

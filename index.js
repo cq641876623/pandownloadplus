@@ -37,7 +37,7 @@ function createWindow () {
     win.loadFile('index.html')
 
     // 打开开发者工具
-    win.webContents.openDevTools()
+    // win.webContents.openDevTools()
 
     win.on("maximize",function () {
         console.log("max")
@@ -99,8 +99,8 @@ function createWindow () {
         }
 
     });
-    // let cmdPath = resolve(__dirname,  "../");//打包
-    let cmdPath =  resolve(__dirname,"");//未打包
+    let cmdPath = resolve(__dirname,  "../");//打包
+    // let cmdPath =  resolve(__dirname,"");//未打包
     let cmdStr = 'aria2c.exe --conf-path='+cmdPath+'"/aria2.conf" -D'
 
     workerProcess = exec(cmdStr, {cwd: cmdPath})
