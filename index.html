@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
+    <title>pan</title>
     <link href="https://cdn.bootcss.com/element-ui/2.13.0/theme-chalk/index.css" rel="stylesheet">
     <script src="https://cdn.bootcss.com/vue/2.6.11/vue.min.js"></script>
     <script src="https://cdn.bootcss.com/element-ui/2.13.0/index.js"></script>
@@ -120,8 +120,22 @@
 <div id="app"  style="background: #eeeeee;">
 
 
-    <div class="top-tittle drag"  style="position: fixed;top:0;left: 60px;width:calc(100% - 60px) ;height:60px;z-index: 1"></div>
-    <div class="win-control nodrag" >
+    <div style="position: fixed;top: 0;left: 0;height: 100%;width: 100%;background:url( timg.gif);background-repeat: no-repeat;
+    background-size: 100% 100%;" v-show="loading">
+
+    </div>
+
+    <div class="top-tittle drag"  style="position: fixed;top:0;left: 60px;width:100% ;height:60px;line-height:30px;z-index: 1" v-show="!loading">
+        <span style="margin-right: 30px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            text-indent: 1em;
+            font-size: 14px;
+            font-weight: 700;
+            color: #666;">百度云盘下载器 v0.0.1  </span>
+    </div>
+    <div class="win-control nodrag" v-show="!loading">
 
         <div  class="cq-win-cbtn-acss " @click="winControl('min',$event)" @mouseover="winControlOver($event)" @mouseout="winControlOut($event)"><i class="el-icon-minus cq-wc-ico"></i></div>
         <div  class="cq-win-cbtn-acss" @click="winControl('max',$event)" @mouseover="winControlOver($event)" @mouseout="winControlOut($event)"><i class="el-icon-copy-document cq-wc-ico"></i></div>
@@ -173,7 +187,9 @@
     border-bottom: 1px solid #D0DFE7;
     height: 44px;
     line-height: 44px;
-    font-weight: 200;">
+    font-weight: 200;"
+        v-show="!loading"
+        >
             <span style="display: block;
             margin-right: 50px;
             overflow: hidden;
@@ -248,7 +264,7 @@
 
 
 
-    <webview id="foo" src="load.html"  style="position:fixed;top:30px;left:0px;width:100%  ;height: calc(100% - 30px);z-index: 2;box-shadow: inset 0 2px 2px 1px rgba(154, 154, 204, 0.22);" nodeintegration nodeintegrationinsubframes ></webview>
+    <webview id="foo" src=""  style="position:fixed;top:30px;left:0px;width:100%  ;height: calc(100% - 30px);z-index: 2;" nodeintegration nodeintegrationinsubframes ></webview>
 
 
 
@@ -276,6 +292,7 @@
                     {toolIcon:'el-icon-chat-dot-round'},
                     {toolIcon:'el-icon-user'},
                 ],
+                loading:true,
                 hello:"nihao",
                 openDownLoad:false,
                 settingpre:false,
@@ -405,6 +422,7 @@
                // webview.openDevTools()
 
             webview.addEventListener('new-window', (e) => {
+
                 const protocol = require('url').parse(e.url).protocol;
                 if (protocol === 'http:' || protocol === 'https:') {
                     webview.src = e.url;
@@ -463,7 +481,14 @@
             //
             //     }
             // });
-            webview.getWebContents().loadURL('https://pan.baidu.com/')
+            setTimeout(function(){
+                webview.getWebContents().loadURL('https://pan.baidu.com/')
+                ipcRenderer.send("win-maxed",{});
+                vueobj.loading=false;
+
+                }, 3000);
+
+
             webview.addEventListener('ipc-message', function(event) {
                 console.log(event.channel);
                 console.log(event.args );

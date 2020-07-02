@@ -11,8 +11,8 @@ const path = require('path');
 // 保持对window对象的全局引用，如果不这么做的话，当JavaScript对象被
 // 垃圾回收的时候，window对象将会自动的关闭
 let win
-let defWidth=833
-let defHeight=600
+let defWidth=400
+let defHeight=300
 
 function createWindow () {
 
@@ -21,10 +21,10 @@ function createWindow () {
     let keyCookie=null;
     // 创建浏览器窗口。
     win = new BrowserWindow({
-        width: 900, height: 600,
+        width: defWidth, height: defHeight,
         autoHideMenuBar :true,
         frame: false,
-        // transparent:true,
+        transparent:true,
         webPreferences: {
             nodeIntegration: true,
             webSecurity: false,
@@ -45,8 +45,10 @@ function createWindow () {
     win.on("unmaximize",function () {
         console.log("unmaximize")
     })
-    win.maximize()
-
+    // win.maximize()
+    ipcMain.on('win-maxed', function(event, arg) {
+        win.maximize()
+    });
 
     ipcMain.on('set-key-cookie', function(event, arg) {
         session.defaultSession.cookies.get({ name:"BDUSS",domain: '.baidu.com' })
@@ -99,8 +101,8 @@ function createWindow () {
         }
 
     });
-    let cmdPath = resolve(__dirname,  "../");//打包
-    // let cmdPath =  resolve(__dirname,"");//未打包
+    // let cmdPath = resolve(__dirname,  "../");//打包
+    let cmdPath =  resolve(__dirname,"");//未打包
     let cmdStr = 'aria2c.exe --conf-path='+cmdPath+'"/aria2.conf" -D'
 
     workerProcess = exec(cmdStr, {cwd: cmdPath})
