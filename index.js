@@ -3,6 +3,7 @@ const electron = require('electron')
 const { session } = require('electron')
 const exec = require('child_process').exec
 const {resolve} = require('path')
+var websocket = require('./websocket');
 
 
 
@@ -13,7 +14,9 @@ const path = require('path');
 let win
 let defWidth=400
 let defHeight=300
-
+var appIcon = null;
+var aria2cStatus={status:true,msg:"成功"}
+let processWin;
 function createWindow () {
 
 
@@ -66,6 +69,10 @@ function createWindow () {
         }
         event.sender.send("start-task",arg)
     })
+    ipcMain.on('get-aria2c-status', function(event, arg) {
+        event.sender.send("response-aria2c-status",aria2cStatus)
+    })
+
 
 
     ipcMain.on('win-control-message', function(event, arg) {
@@ -75,7 +82,7 @@ function createWindow () {
         // console.log(win.getSize())
         switch (arg) {
             case 'close':
-                win.close()
+               win.close()
                 break;
             case 'max':
 
@@ -95,17 +102,28 @@ function createWindow () {
                 // }
                 break;
             case 'min':
-                win.minimize()
+                win.hide()
                 break;
 
         }
 
     });
+
     // let cmdPath = resolve(__dirname,  "../");//打包
     let cmdPath =  resolve(__dirname,"");//未打包
     let cmdStr = 'aria2c.exe --conf-path='+cmdPath+'"/aria2.conf" -D'
 
-    workerProcess = exec(cmdStr, {cwd: cmdPath})
+    workerProcess = exec(cmdStr, {cwd: cmdPath},(error, stdout, stderr) => {
+        if (error) {
+            console.error(`执行的错误: ${error}`);
+            aria2cStatus.status=false;
+            aria2cStatus.msg=error;
+            return;
+        }
+        console.log(`stdout: ${stdout}`);
+        console.error(`stderr: ${stderr}`);
+
+    })
     workerProcess.stdout.on('data', function (data) {
         // console.log('stdout: ' + data);
         console.log('stdout: ' ,data);
@@ -135,11 +153,34 @@ function createWindow () {
         // 与此同时，你应该删除相应的元素。
         win = null
     })
+
+
+    createTray()
 }
+
+function createTray(){
+
+    appIcon = new Tray( path.join(__dirname, 'yun.png'));
+    var contextMenu = Menu.buildFromTemplate([
+        { label: '显示主界面', type: 'normal' ,click: function() { win.show(); }},
+        { label: '退出', type: 'normal' ,click: function() { win.close(); }}
+    ]);
+    appIcon.setToolTip('云盘下载器');
+    appIcon.setContextMenu(contextMenu);
+
+    appIcon.on('click', function () {
+        win.show();
+    })
+
+
+
+}
+
 
 // Electron 函会在初始化后并准备
 // // 创建浏览器窗口时，调用这个数。
 // 部分 API 在 ready 事件触发后才能使用。
+app.allowRendererProcessReuse=false
 app.on('ready', createWindow)
 
 // 当全部窗口关闭时退出。
@@ -147,7 +188,16 @@ app.on('window-all-closed', () => {
     // 在 macOS 上，除非用户用 Cmd + Q 确定地退出，
     // 否则绝大部分应用及其菜单栏会保持激活。
     if (process.platform !== 'darwin') {
-
+        websocket.connect(function() {
+            websocket.send({
+                "method": "aria2.shutdown",
+                "params": [
+                    "token:rorochen-download"
+                ]
+            }, function(result) {
+                console.log(result);
+            });
+        });
         workerProcess = exec("taskkill /F /im aria2c.exe")
 
         app.quit()
