@@ -109,8 +109,8 @@ function createWindow () {
 
     });
 
-    // let cmdPath = resolve(__dirname,  "../");//打包
-    let cmdPath =  resolve(__dirname,"");//未打包
+    let cmdPath = resolve(__dirname,  "../");//打包
+    // let cmdPath =  resolve(__dirname,"");//未打包
     let cmdStr = 'aria2c.exe --conf-path='+cmdPath+'"/aria2.conf" -D'
 
     workerProcess = exec(cmdStr, {cwd: cmdPath},(error, stdout, stderr) => {
