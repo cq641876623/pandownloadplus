@@ -405,8 +405,8 @@
     if(localStorage.getItem("downloadPath")!=null){
         vueobj.downLoadPath=localStorage.getItem("downloadPath");
     }else {
-        let download = resolve(__dirname,  "../../download");//打包
-        // let download =  resolve(__dirname,"./download");//未打包
+        // let download = resolve(__dirname,  "../../download");//打包
+        let download =  resolve(__dirname,"./download");//未打包
         console.log("download",download);
 
         vueobj.downLoadPath=download;

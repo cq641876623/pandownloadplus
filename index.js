@@ -74,7 +74,6 @@ function createWindow () {
     })
 
 
-
     ipcMain.on('win-control-message', function(event, arg) {
         // console.log(arg);  // prints "ping"
         win.setBounds(0,0,defWidth, defHeight)
@@ -109,8 +108,8 @@ function createWindow () {
 
     });
 
-    let cmdPath = resolve(__dirname,  "../");//打包
-    // let cmdPath =  resolve(__dirname,"");//未打包
+    // let cmdPath = resolve(__dirname,  "../");//打包
+    let cmdPath =  resolve(__dirname,"");//未打包
     let cmdStr = 'aria2c.exe --conf-path='+cmdPath+'"/aria2.conf" -D'
 
     workerProcess = exec(cmdStr, {cwd: cmdPath},(error, stdout, stderr) => {
@@ -171,6 +170,9 @@ function createTray(){
     appIcon.on('click', function () {
         win.show();
     })
+
+
+    let child = new BrowserWindow({ parent: win })
 
 
 

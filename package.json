@@ -5,16 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "package": "electron-packager . pandownloadplus --platform=win32 --arch=x64 --icon=icon.ico --out=./out --asar --app-version=0.0.1",
-    "packagemac": "electron-packager . pandownloadplus --platform=mas --arch=x64 --icon=icon.ico --out=./out --asar --app-version=0.0.1",
+    "package": "electron-packager . pandownloadplus --arch=x64 --icon=icon.ico --out=./out  --overwrite  --app-version=0.0.1",
+    "packagemac": "electron-packager . pandownloadplus --platform=mas --arch=x64 --icon=icon.ico --out=./out  --app-version=0.0.2",
     "start": "electron ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^8.1.1",
-    "node-sass": "^4.14.1"
+    "electron": "^8.1.1"
   },
   "dependencies": {
     "websocket": "^1.0.31"
