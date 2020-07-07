@@ -155,6 +155,7 @@ function createWindow () {
 
 
     createTray()
+    createProccessWin()
 }
 
 function createTray(){
@@ -162,6 +163,14 @@ function createTray(){
     appIcon = new Tray( path.join(__dirname, 'yun.png'));
     var contextMenu = Menu.buildFromTemplate([
         { label: '显示主界面', type: 'normal' ,click: function() { win.show(); }},
+        { label: '显示/隐藏悬浮', type: 'normal' ,click: function() {
+            if(processWin.isVisible()){
+                processWin.hide();
+            }else {
+                processWin.show();
+            }
+
+        }},
         { label: '退出', type: 'normal' ,click: function() { win.close(); }}
     ]);
     appIcon.setToolTip('云盘下载器');
@@ -172,9 +181,39 @@ function createTray(){
     })
 
 
-    let child = new BrowserWindow({ parent: win })
 
 
+
+
+}
+
+
+function createProccessWin(){
+    processWin = new BrowserWindow({ parent: win , width: 110, height: 110,
+        autoHideMenuBar :true,
+        x:100,
+        y:100,
+        frame: false,
+        transparent:true,
+        maximizable:false,
+        alwaysOnTop:true,
+        resizeable:false,
+        fullscreen:false,
+        webPreferences: {
+            nodeIntegration: true,
+            webSecurity: false,
+            webviewTag:true,
+
+        },
+        titleBarStyle:"hidden"})
+
+    processWin.loadFile('proccess.html')
+    processWin.on('app-command', function(e, cmd) {
+        // Navigate the window back when the user hits their mouse back button
+        console.log(cmd)
+
+    });
+    // processWin.webContents.openDevTools()
 
 }
 
