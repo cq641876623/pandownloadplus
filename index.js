@@ -213,7 +213,7 @@ function createProccessWin(){
         console.log(cmd)
 
     });
-    // processWin.webContents.openDevTools()
+    processWin.webContents.openDevTools()
 
 }
 
